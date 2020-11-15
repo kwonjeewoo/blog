@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- memo.mapper 패키지의 memo.xml -->
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="board">
+	<!-- 게시물 목록 -->
+	<select id="List" resultType="b">
+		select num, writer, subject, reg_date, readcount, ref, re_step, re_level,
+		(select count(*) from board_comment where board_num = num) comment_count
+		from board
+		order by ref desc, re_step asc
+	</select>
+	
+	<!-- 게시물 추가 -->
+	<insert id="insert">
+		insert into board (writer, subject, password, ref, re_step, re_level, content, ip) 
+		values ( #{writer}, #{subject}, #{password}, 1, #{re_step}, #{re_level}, #{content}, #{ip} )
+	</insert>
+	
+	<!-- 게시물 답글 추가 -->
+	<insert id="reply">
+		insert into board 
+			(writer, subject, password, ref, re_step, re_level, content, ip)
+		values 
+			( #{writer}, #{subject}, #{password}, #{ref}, #{re_step}, #{re_level}, #{content}, #{ip} )
+	</insert>
+	
+	<!-- 답글의 출력 순서 조정 -->
+	<insert id="updateStep">
+		update board
+		set re_step = re_step+1
+		where ref=#{ref} and re_step >= #{re_step}
+	</insert>
+	
+	<!-- 게시물 번호에 해당하는 첨부파일 이름 -->
+	<select id="getFileName" resultType="String">
+		select filename from board where num=#{num}
+	</select>
+	
+	<!-- 조회수 증가 처리 -->
+	<update id="plusReadCount">
+		UPDATE board SET readcount = readcount + 1 WHERE num = #{num}
+	</update>
+	
+	<!-- 상세화면용 to 리턴 -->
+	<select id="view" resultType="b">
+		SELECT * FROM board WHERE num = #{num};
+	</select>
+	
+	<!-- 게시물 비밀번호 체크 -->
+	<select id="pass_check" resultType="String">
+		SELECT password FROM board WHERE num =#{num} and password = #{password}
+	</select>	
+	
+	<!-- 게시물 업데이트 수정 -->
+	<update id="update">
+		UPDATE board 
+		set writer=#{writer}, subject=#{subject}, content=#{content}
+		where num = #{num}
+	</update>
+	
+	<!-- 게시물 삭제/숨김 -->
+	<delete id="delete">
+		DELETE from board where num = #{num}
+	</delete>
+	
+	<!-- 댓글 쓰기 -->
+	<insert id="commentAdd">
+		insert into board_comment 
+			(board_num, writer, content) 
+		values 
+			(#{board_num}, #{writer}, #{content});
+	</insert>
+	
+	<!-- 댓글 목록 -->
+	<select id="commentList" resultType="board.dto.BoardCommentDTO">
+		select * from board_comment
+		where board_num = #{board_num}
+		order by comment_num
+	</select>
+		
+	<insert id="">
+		insert into board 
+			(writer, subject, password, ref, re_step, re_level, content, ip)
+		values
+			(#{writer}, #{subject}, #{password}, #{ref}, #{re_step}, #{re_level}, #{content}, #{ip})
+	</insert>
+	
+</mapper>
